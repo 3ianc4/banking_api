@@ -13,10 +13,10 @@ defmodule BankingApiWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", BankingApiWeb do
-    pipe_through :browser
+  scope "/api", BankingApiWeb do
+    pipe_through :api
 
-    get "/", PageController, :index
+    post "/accounts", AccountController, :create
   end
 
   # Other scopes may use custom stacks.
