@@ -31,4 +31,11 @@ defmodule BankingApi.Accounts.Schemas.Account do
     |> validate_number(:balance, greater_than_or_equal_to: 0)
     |> unique_constraint(:email)
   end
+
+  @doc false
+  def changeset_update(account, params) do
+    account
+    |> cast(params, [:balance])
+    |> validate_number(:balance, greater_than_or_equal_to: 0)
+  end
 end

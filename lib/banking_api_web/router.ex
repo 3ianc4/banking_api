@@ -16,7 +16,8 @@ defmodule BankingApiWeb.Router do
   scope "/api", BankingApiWeb do
     pipe_through :api
 
-    post "/accounts", AccountController, :create
+    post "/accounts/create", AccountController, :create
+    patch "/accounts/withdraw", AccountController, :withdraw
   end
 
   # Other scopes may use custom stacks.
