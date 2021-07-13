@@ -2,7 +2,6 @@ defmodule BankingApi.Accounts.AccountTest do
   use ExUnit.Case, async: true
 
   alias BankingApi.Accounts.Account
-  alias BankingApi.Accounts.Schemas.Account, as: Accounts
 
   describe "create_account/1" do
     setup do

@@ -3,7 +3,6 @@ defmodule BankingApiWeb.AccountController do
   use BankingApiWeb, :controller
 
   alias BankingApi.Accounts.Account
-  alias BankingApi.Accounts.Schemas.Account, as: Accounts
   alias BankingApi.Accounts.Inputs.Withdraw
 
   @doc false
@@ -16,7 +15,7 @@ defmodule BankingApiWeb.AccountController do
 
       send_json(conn, 201, response)
     else
-      {:error, %Ecto.Changeset{errors: errors}} ->
+      {:error, %Ecto.Changeset{errors: _errors}} ->
         message = %{
           type: "Unprocessable Entity",
           description: "Invalid input"
