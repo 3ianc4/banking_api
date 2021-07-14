@@ -18,6 +18,8 @@ defmodule BankingApiWeb.Router do
 
     post "/accounts/create", AccountController, :create
 
+    get "/accounts/show", AccountController, :show
+
     patch "/accounts/deposit", AccountController, :deposit
     patch "/accounts/withdraw", AccountController, :withdraw
     patch "/accounts/transfer", AccountController, :transfer

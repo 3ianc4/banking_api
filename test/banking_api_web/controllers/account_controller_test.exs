@@ -4,7 +4,7 @@ defmodule BankingApiWeb.AccountControllerTest do
   import Ecto.Changeset
 
   alias BankingApi.Repo
-  # alias BankingApi.Accounts.Account
+  alias BankingApi.Accounts.Account
   alias BankingApi.Accounts.Schemas.Account, as: Accounts
 
   describe "POST /api/accounts/create" do
@@ -53,6 +53,22 @@ defmodule BankingApiWeb.AccountControllerTest do
                ctx.conn
                |> post("/api/accounts/create", input)
                |> json_response(422)
+    end
+  end
+
+  describe "POST /api/accounts/show" do
+    test "successfully shows account's balance", %{conn: conn} do
+      account_params = %{
+        "name" => "anna",
+        "email" => "anna@mail.com",
+        "balance" => 10
+      }
+
+      {:ok, account} = Account.create_account(account_params)
+      assert "{\"description\":\"Your current balance is 10\"}" =
+               conn
+               |> get("/api/accounts/show", %{"id" => account.id})
+               |> response(200)
     end
   end
 

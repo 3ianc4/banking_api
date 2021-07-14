@@ -7,7 +7,10 @@ defmodule BankingApiWeb.AccountController do
   alias BankingApi.Accounts.Inputs.Transfer
   alias BankingApi.Accounts.Inputs.Withdraw
 
-  @doc false
+  action_fallback BankingApiWeb.FallbackController
+
+  @doc "Create a new account"
+  @spec create(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def create(conn, params) do
     with {:ok, account} <- Account.create_account(params) do
       response = %{
@@ -33,6 +36,17 @@ defmodule BankingApiWeb.AccountController do
     end
   end
 
+  def show(conn, %{"id" => account_id}) do
+    with balance <- Account.balance(account_id) do
+      send_json(conn, 200, %{description: "Your current balance is #{balance}"})
+    else
+      {:error, :not_found} ->
+        send_json(conn, 404, %{type: "not_found", description: "Account not found"})
+    end
+  end
+
+  @doc "Withdraw money from an account"
+  @spec withdraw(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def withdraw(conn, params) do
     with {:ok, validated} <- validate_transaction(params, Withdraw),
          {:ok, account} <- Account.withdraw(validated) do
@@ -47,15 +61,15 @@ defmodule BankingApiWeb.AccountController do
       send_json(conn, 200, response)
 
     else
-      {:error, %Ecto.Changeset{errors: [balance: _]}} ->
-        message = %{
-          reason: "Invalid balance"
-        }
+      {:error, %Ecto.Changeset{errors: [balance: _]} = changeset} ->
+        {:error, changeset}
 
-        send_json(conn, 200, message)
+        send_json(conn, 200, "{:error, :inssuficient_balance}")
     end
   end
 
+  @doc "Deposit money to an account"
+  @spec deposit(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def deposit(conn, params) do
     with {:ok, validated} <- validate_transaction(params, Deposit),
          {:ok, account} <- Account.deposit(validated) do
@@ -71,6 +85,8 @@ defmodule BankingApiWeb.AccountController do
     end
   end
 
+  @doc "Transfers money from an account to another"
+  @spec transfer(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def transfer(conn, params) do
     with {:ok, validated} <- validate_transaction(params, Transfer),
          {:ok, from_account} <- Account.transfer(validated) do
