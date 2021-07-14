@@ -19,14 +19,14 @@ defmodule BankingApiWeb.AccountController do
     else
       {:error, %Ecto.Changeset{errors: [name: _]}} ->
         message = %{
-          description: "Invalid name"
+          reason: "Invalid name"
         }
 
         send_json(conn, 422, message)
 
       {:error, %Ecto.Changeset{errors: [email: _]}} ->
         message = %{
-          description: "Invalid email"
+          reason: "Invalid email"
         }
 
         send_json(conn, 422, message)
@@ -45,6 +45,14 @@ defmodule BankingApiWeb.AccountController do
       }
 
       send_json(conn, 200, response)
+
+    else
+      {:error, %Ecto.Changeset{errors: [balance: _]}} ->
+        message = %{
+          reason: "Invalid balance"
+        }
+
+        send_json(conn, 200, message)
     end
   end
 
@@ -75,6 +83,13 @@ defmodule BankingApiWeb.AccountController do
       }
 
       send_json(conn, 200, response)
+    else
+      {:error, %Ecto.Changeset{errors: [balance: _]}} ->
+        message = %{
+          reason: "Invalid balance"
+        }
+
+        send_json(conn, 200, message)
     end
   end
 

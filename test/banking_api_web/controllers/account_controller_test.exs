@@ -36,7 +36,7 @@ defmodule BankingApiWeb.AccountControllerTest do
         "name" => "Jo",
         "email" => "john@email.com"
       }
-      assert %{"description" => "Invalid name"}
+      assert %{"reason" => "Invalid name"}
              =
                ctx.conn
                |> post("/api/accounts/create", input)
@@ -48,7 +48,7 @@ defmodule BankingApiWeb.AccountControllerTest do
         "name" => "John",
         "email" => "johnemail.com"
       }
-      assert %{"description" => "Invalid email"}
+      assert %{"reason" => "Invalid email"}
              =
                ctx.conn
                |> post("/api/accounts/create", input)
@@ -72,6 +72,26 @@ defmodule BankingApiWeb.AccountControllerTest do
       }
 
       assert %{"account" => %{"balance" => 70, "id" => _}, "message" => "Withdrawal successful"} =
+               conn
+               |> patch("/api/accounts/withdraw", input_for_withdrawal)
+               |> json_response(200)
+    end
+
+    test "fails withdraw when balance is unsuficient", %{conn: conn} do
+      new_account_params = %{
+        "name" => "John Doe",
+        "email" => "john@email.com",
+        "balance" => 100
+      }
+
+      account = Repo.insert!(Accounts.changeset(new_account_params))
+
+      input_for_withdrawal = %{
+        "account_id" => account.id,
+        "amount" => 150
+      }
+
+      assert %{"reason" => "Invalid balance"} =
                conn
                |> patch("/api/accounts/withdraw", input_for_withdrawal)
                |> json_response(200)
@@ -130,6 +150,35 @@ defmodule BankingApiWeb.AccountControllerTest do
                },
                "message" => "Transfer successful"
              } =
+               conn
+               |> patch("/api/accounts/transfer", input_for_transfer)
+               |> json_response(200)
+    end
+
+    test "fails transfers when balance is insufficient", %{conn: conn} do
+      from_account_params = %{
+        "name" => "John Doe",
+        "email" => "john@email.com",
+        "balance" => 100
+      }
+
+      to_account_params = %{
+        "name" => "Johanna Doe",
+        "email" => "johanna@email.com",
+        "balance" => 100
+      }
+
+      from_account = Repo.insert!(Accounts.changeset(from_account_params))
+      to_account = Repo.insert!(Accounts.changeset(to_account_params))
+
+      input_for_transfer = %{
+        "from_account_id" => from_account.id,
+        "to_account_id" => to_account.id,
+        "amount" => 200
+      }
+
+      assert %{"reason" => "Invalid balance"}
+              =
                conn
                |> patch("/api/accounts/transfer", input_for_transfer)
                |> json_response(200)
