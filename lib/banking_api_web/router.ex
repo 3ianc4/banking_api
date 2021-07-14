@@ -18,6 +18,8 @@ defmodule BankingApiWeb.Router do
 
     post "/accounts/create", AccountController, :create
     patch "/accounts/withdraw", AccountController, :withdraw
+    patch "/accounts/deposit", AccountController, :deposit
+    patch "/accounts/transfer", AccountController, :transfer
   end
 
   # Other scopes may use custom stacks.

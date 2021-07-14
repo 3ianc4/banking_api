@@ -3,6 +3,8 @@ defmodule BankingApiWeb.AccountController do
   use BankingApiWeb, :controller
 
   alias BankingApi.Accounts.Account
+  alias BankingApi.Accounts.Inputs.Deposit
+  alias BankingApi.Accounts.Inputs.Transfer
   alias BankingApi.Accounts.Inputs.Withdraw
 
   @doc false
@@ -33,6 +35,36 @@ defmodule BankingApiWeb.AccountController do
         account: %{
           id: account.id,
           balance: account.balance
+        }
+      }
+
+      send_json(conn, 200, response)
+    end
+  end
+
+  def deposit(conn, params) do
+    with {:ok, validated} <- validate_transaction(params, Deposit),
+         {:ok, account} <- Account.deposit(validated) do
+      response = %{
+        message: "Deposit successful",
+        account: %{
+          id: account.id,
+          balance: account.balance
+        }
+      }
+
+      send_json(conn, 200, response)
+    end
+  end
+
+  def transfer(conn, params) do
+    with {:ok, validated} <- validate_transaction(params, Transfer),
+         {:ok, from_account} <- Account.transfer(validated) do
+      response = %{
+        message: "Transfer successful",
+        from_account: %{
+          id: from_account.id,
+          balance: from_account.balance
         }
       }
 
