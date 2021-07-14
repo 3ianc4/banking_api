@@ -1,17 +1,23 @@
 defmodule BankingApiWeb.AccountControllerTest do
   use BankingApiWeb.ConnCase
 
+  import Ecto.Changeset
+
   alias BankingApi.Repo
   # alias BankingApi.Accounts.Account
   alias BankingApi.Accounts.Schemas.Account, as: Accounts
 
   describe "POST /api/accounts/create" do
-    test "successfully create account when input is valid", %{conn: conn} do
+    setup do
       input = %{
         "name" => "John Doe",
         "email" => "john@email.com"
       }
 
+      {:ok, input: input}
+    end
+
+    test "successfully create account when input is valid", ctx do
       assert %{
                "message" => "Account created successfully",
                "account" => %{
@@ -20,9 +26,33 @@ defmodule BankingApiWeb.AccountControllerTest do
                  "name" => "John Doe"
                }
              } =
-               conn
-               |> post("/api/accounts/create", input)
+               ctx.conn
+               |> post("/api/accounts/create", ctx.input)
                |> json_response(201)
+    end
+
+    test "fails on creating account when name is invalid", ctx do
+      input = %{
+        "name" => "Jo",
+        "email" => "john@email.com"
+      }
+      assert %{"description" => "Invalid name"}
+             =
+               ctx.conn
+               |> post("/api/accounts/create", input)
+               |> json_response(422)
+    end
+
+    test "fails on creating account when email is invalid", ctx do
+      input = %{
+        "name" => "John",
+        "email" => "johnemail.com"
+      }
+      assert %{"description" => "Invalid email"}
+             =
+               ctx.conn
+               |> post("/api/accounts/create", input)
+               |> json_response(422)
     end
   end
 
@@ -105,4 +135,8 @@ defmodule BankingApiWeb.AccountControllerTest do
                |> json_response(200)
     end
   end
+
+  # defp update!(model, changes) do
+  #   model |> change(changes) |> Repo.update!()
+  # end
 end

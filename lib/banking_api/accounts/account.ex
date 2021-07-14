@@ -1,6 +1,6 @@
 defmodule BankingApi.Accounts.Account do
   @moduledoc """
-  false
+  The Accounts context.
   """
   alias BankingApi.Accounts.Schemas.Account
   alias BankingApi.Repo

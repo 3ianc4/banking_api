@@ -1,6 +1,6 @@
 defmodule BankingApi.Accounts.Inputs.Transfer do
   @moduledoc """
-  false
+  Transfer input type.
   """
   use Ecto.Schema
 

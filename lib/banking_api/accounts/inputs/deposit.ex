@@ -1,6 +1,6 @@
 defmodule BankingApi.Accounts.Inputs.Deposit do
   @moduledoc """
-  false
+  Deposit input type.
   """
   use Ecto.Schema
 

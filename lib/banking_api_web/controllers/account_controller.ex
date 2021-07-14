@@ -17,10 +17,16 @@ defmodule BankingApiWeb.AccountController do
 
       send_json(conn, 201, response)
     else
-      {:error, %Ecto.Changeset{errors: _errors}} ->
+      {:error, %Ecto.Changeset{errors: [name: _]}} ->
         message = %{
-          type: "Unprocessable Entity",
-          description: "Invalid input"
+          description: "Invalid name"
+        }
+
+        send_json(conn, 422, message)
+
+      {:error, %Ecto.Changeset{errors: [email: _]}} ->
+        message = %{
+          description: "Invalid email"
         }
 
         send_json(conn, 422, message)

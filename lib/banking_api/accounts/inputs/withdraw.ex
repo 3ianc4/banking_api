@@ -1,6 +1,6 @@
 defmodule BankingApi.Accounts.Inputs.Withdraw do
   @moduledoc """
-  false
+  Withdraw input type.
   """
   use Ecto.Schema
 
