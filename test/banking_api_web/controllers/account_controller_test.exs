@@ -1,11 +1,8 @@
 defmodule BankingApiWeb.AccountControllerTest do
   use BankingApiWeb.ConnCase
 
-  import Ecto.Changeset
-
-  alias BankingApi.Repo
-  alias BankingApi.Accounts.Account
   alias BankingApi.Accounts.Schemas.Account, as: Accounts
+  alias BankingApi.Repo
 
   describe "POST /api/accounts/create" do
     setup do
@@ -36,8 +33,8 @@ defmodule BankingApiWeb.AccountControllerTest do
         "name" => "Jo",
         "email" => "john@email.com"
       }
-      assert %{"reason" => "Invalid name"}
-             =
+
+      assert %{"reason" => "Invalid name"} =
                ctx.conn
                |> post("/api/accounts/create", input)
                |> json_response(422)
@@ -48,8 +45,8 @@ defmodule BankingApiWeb.AccountControllerTest do
         "name" => "John",
         "email" => "johnemail.com"
       }
-      assert %{"reason" => "Invalid email"}
-             =
+
+      assert %{"reason" => "Invalid email"} =
                ctx.conn
                |> post("/api/accounts/create", input)
                |> json_response(422)
@@ -64,7 +61,8 @@ defmodule BankingApiWeb.AccountControllerTest do
         "balance" => 10
       }
 
-      {:ok, account} = Account.create_account(account_params)
+      {:ok, account} = BankingApi.create_account(account_params)
+
       assert "{\"description\":\"Your current balance is 10\"}" =
                conn
                |> get("/api/accounts/show", %{"id" => account.id})
@@ -107,7 +105,7 @@ defmodule BankingApiWeb.AccountControllerTest do
         "amount" => 150
       }
 
-      assert %{"reason" => "Invalid balance"} =
+      assert "{:error, :inssuficient_balance}" =
                conn
                |> patch("/api/accounts/withdraw", input_for_withdrawal)
                |> json_response(200)
@@ -193,8 +191,7 @@ defmodule BankingApiWeb.AccountControllerTest do
         "amount" => 200
       }
 
-      assert %{"reason" => "Invalid balance"}
-              =
+      assert %{"reason" => "Invalid balance"} =
                conn
                |> patch("/api/accounts/transfer", input_for_transfer)
                |> json_response(200)

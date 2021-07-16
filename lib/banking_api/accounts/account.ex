@@ -21,7 +21,7 @@ defmodule BankingApi.Accounts.Account do
     account = Repo.get(Account, account_id)
 
     if is_nil(account) do
-      {:error, :invalid_account}
+      {:error, :not_found}
     else
       {:ok, account}
     end

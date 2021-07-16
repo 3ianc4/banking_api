@@ -3,16 +3,15 @@ defmodule BankingApiWeb.AccountController do
   use BankingApiWeb, :controller
 
   alias BankingApi.Accounts.Account
-  alias BankingApi.Accounts.Inputs.Deposit
-  alias BankingApi.Accounts.Inputs.Transfer
-  alias BankingApi.Accounts.Inputs.Withdraw
+  alias BankingApi.Accounts.Inputs.{Deposit, Transfer, Withdraw}
+  alias BankingApi.Accounts.Transactions
 
   action_fallback BankingApiWeb.FallbackController
 
   @doc "Create a new account"
   @spec create(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def create(conn, params) do
-    with {:ok, account} <- Account.create_account(params) do
+    with {:ok, account} <- BankingApi.create_account(params) do
       response = %{
         message: "Account created successfully",
         account: account
@@ -49,7 +48,7 @@ defmodule BankingApiWeb.AccountController do
   @spec withdraw(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def withdraw(conn, params) do
     with {:ok, validated} <- validate_transaction(params, Withdraw),
-         {:ok, account} <- Account.withdraw(validated) do
+         {:ok, account} <- BankingApi.withdraw(validated) do
       response = %{
         message: "Withdrawal successful",
         account: %{
@@ -59,10 +58,12 @@ defmodule BankingApiWeb.AccountController do
       }
 
       send_json(conn, 200, response)
-
     else
       {:error, %Ecto.Changeset{errors: [balance: _]} = changeset} ->
         {:error, changeset}
+
+      {:error, :insufficient_funds} ->
+        {:error, :insufficient_funds}
 
         send_json(conn, 200, "{:error, :inssuficient_balance}")
     end
@@ -72,7 +73,7 @@ defmodule BankingApiWeb.AccountController do
   @spec deposit(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def deposit(conn, params) do
     with {:ok, validated} <- validate_transaction(params, Deposit),
-         {:ok, account} <- Account.deposit(validated) do
+         {:ok, account} <- BankingApi.deposit(validated) do
       response = %{
         message: "Deposit successful",
         account: %{
@@ -89,7 +90,7 @@ defmodule BankingApiWeb.AccountController do
   @spec transfer(conn :: Plug.Conn.t(), params :: map()) :: Plug.Conn.t()
   def transfer(conn, params) do
     with {:ok, validated} <- validate_transaction(params, Transfer),
-         {:ok, from_account} <- Account.transfer(validated) do
+         {:ok, from_account} <- BankingApi.transfer(validated) do
       response = %{
         message: "Transfer successful",
         from_account: %{

@@ -1,5 +1,8 @@
 defmodule BankingApi.Accounts.Transactions do
-  @moduledoc false
+  @moduledoc """
+  Domain functions for transactions
+  """
+  require Logger
 
   alias BankingApi.Accounts.Account
   alias BankingApi.Accounts.Schemas.Account, as: Accounts
@@ -9,10 +12,21 @@ defmodule BankingApi.Accounts.Transactions do
   @spec withdraw(params :: map()) :: {:ok, Changeset.t()}
   def withdraw(params) do
     with {:ok, account} <- Account.get_account(params.account_id),
-         {:valid?, true} <- {:valid?, Account.has_sufficient_funds?(params.account_id, params.amount)} do
+         {:valid?, true} <-
+           {:valid?, Account.has_sufficient_funds?(params.account_id, params.amount)} do
       do_withdraw(params, account)
     else
-      {:error, error} -> {:error, error}
+      {:error, :not_found} ->
+        logger_info()
+        {:error, :invalid_account}
+
+      {:valid?, false} ->
+        Logger.info("Insuficient funds to withdraw")
+        {:error, :insufficient_funds}
+
+      {:error, error} ->
+        logger_error("withdraw")
+        {:error, error}
     end
   end
 
@@ -21,6 +35,14 @@ defmodule BankingApi.Accounts.Transactions do
   def deposit(params) do
     with {:ok, account} <- Account.get_account(params.account_id) do
       do_deposit(params, account)
+    else
+      {:error, :not_found} ->
+        logger_info()
+        {:error, :invalid_account}
+
+      {:error, error} ->
+        logger_error("deposit")
+        {:error, error}
     end
   end
 
@@ -30,6 +52,14 @@ defmodule BankingApi.Accounts.Transactions do
     with {:ok, from_account} <- Account.get_account(params.from_account_id),
          {:ok, to_account} <- Account.get_account(params.to_account_id) do
       do_transfer(params, from_account, to_account)
+    else
+      {:error, :not_found} ->
+        logger_info()
+        {:error, :invalid_account}
+
+      {:error, error} ->
+        logger_error("transfer")
+        {:error, error}
     end
   end
 
@@ -56,4 +86,14 @@ defmodule BankingApi.Accounts.Transactions do
     from
   end
 
+  defp logger_info do
+    Logger.error("Account not found")
+  end
+
+  defp logger_error(error) do
+    Logger.error("""
+    Failed on attempting to #{error}.
+    ERROR: #{inspect(error)}
+    """)
+  end
 end
