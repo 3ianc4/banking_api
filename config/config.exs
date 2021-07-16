@@ -1,11 +1,12 @@
 import Config
 
 config :banking_api,
-  ecto_repos: [BankingApi.Repo]
+  ecto_repos: [BankingApi.Repo],
+  generators: [context_app: :banking_api, binary_id: true]
 
 config :banking_api, BankingApiWeb.Endpoint,
   url: [host: "localhost"],
-  secret_key_base: "6+apVA9pcXNPD+ATelGodNNXNeMLAeAegkTmhuEF9RvgC/+D0eNxGBa1wKubWpdQ",
+  secret_key_base: System.get_env("SECRET_KEY_BASE"),
   render_errors: [view: BankingApiWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: BankingApi.PubSub,
   live_view: [signing_salt: "xYHpZ7q+"]
