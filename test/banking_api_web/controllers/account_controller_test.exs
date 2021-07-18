@@ -4,123 +4,94 @@ defmodule BankingApiWeb.AccountControllerTest do
   alias BankingApi.Accounts.Schemas.Account, as: Accounts
   alias BankingApi.Repo
 
+  setup do
+    account_input = %{
+      "name" => "Ana Maria",
+      "email" => "anamaria@email.com",
+      "balance" => 100
+    }
+
+    {:ok, account_input: account_input}
+  end
+
   describe "POST /api/accounts/create" do
-    setup do
-      input = %{
-        "name" => "John Doe",
-        "email" => "john@email.com"
-      }
-
-      {:ok, input: input}
-    end
-
     test "successfully create account when input is valid", ctx do
       assert %{
                "message" => "Account created successfully",
                "account" => %{
-                 "balance" => 0,
-                 "email" => "john@email.com",
-                 "name" => "John Doe"
+                 "balance" => 100,
+                 "email" => "anamaria@email.com",
+                 "name" => "Ana Maria"
                }
              } =
                ctx.conn
-               |> post("/api/accounts/create", ctx.input)
+               |> post("/api/accounts/create", ctx.account_input)
                |> json_response(201)
     end
 
     test "fails on creating account when name is invalid", ctx do
-      input = %{
-        "name" => "Jo",
-        "email" => "john@email.com"
-      }
+      account_input = update!(ctx.account_input, "name", "Jo")
 
       assert %{"reason" => "Invalid name"} =
                ctx.conn
-               |> post("/api/accounts/create", input)
+               |> post("/api/accounts/create", account_input)
                |> json_response(422)
     end
 
     test "fails on creating account when email is invalid", ctx do
-      input = %{
-        "name" => "John",
-        "email" => "johnemail.com"
-      }
+      account_input = update!(ctx.account_input, "email", "aaaa")
 
       assert %{"reason" => "Invalid email"} =
                ctx.conn
-               |> post("/api/accounts/create", input)
+               |> post("/api/accounts/create", account_input)
                |> json_response(422)
     end
   end
 
   describe "POST /api/accounts/show" do
-    test "successfully shows account's balance", %{conn: conn} do
-      account_params = %{
-        "name" => "anna",
-        "email" => "anna@mail.com",
-        "balance" => 10
-      }
+    test "successfully shows account's balance", ctx do
+      {:ok, account} = BankingApi.create_account(ctx.account_input)
 
-      {:ok, account} = BankingApi.create_account(account_params)
-
-      assert "{\"description\":\"Your current balance is 10\"}" =
-               conn
+      assert "{\"description\":\"Your current balance is 100\"}" =
+               ctx.conn
                |> get("/api/accounts/show", %{"id" => account.id})
                |> response(200)
     end
   end
 
   describe "PATCH /api/accounts/withdraw" do
-    test "successfully withdraw money from an account when input is valid", %{conn: conn} do
-      new_account_params = %{
-        "name" => "John Doe",
-        "email" => "john@email.com",
-        "balance" => 100
-      }
+    test "successfully withdraw money from an account when input is valid", ctx do
+      account = Repo.insert!(Accounts.changeset(ctx.account_input))
 
-      account = Repo.insert!(Accounts.changeset(new_account_params))
-
-      input_for_withdrawal = %{
+      input_for_withdraw = %{
         "account_id" => account.id,
         "amount" => 30
       }
 
-      assert %{"account" => %{"balance" => 70, "id" => _}, "message" => "Withdrawal successful"} =
-               conn
-               |> patch("/api/accounts/withdraw", input_for_withdrawal)
+      assert %{"account" => %{"balance" => 70, "id" => _}, "message" => "Withdraw successful"} =
+               ctx.conn
+               |> patch("/api/accounts/withdraw", input_for_withdraw)
                |> json_response(200)
     end
 
-    test "fails withdraw when balance is unsuficient", %{conn: conn} do
-      new_account_params = %{
-        "name" => "John Doe",
-        "email" => "john@email.com",
-        "balance" => 100
-      }
+    test "withdrawal fails when balance is insufficient", ctx do
+        account = Repo.insert!(Accounts.changeset(ctx.account_input))
 
-      account = Repo.insert!(Accounts.changeset(new_account_params))
-
-      input_for_withdrawal = %{
+      input_for_withdraw = %{
         "account_id" => account.id,
         "amount" => 150
       }
 
-      assert "{:error, :inssuficient_balance}" =
-               conn
-               |> patch("/api/accounts/withdraw", input_for_withdrawal)
+      assert "{:error, :insufficient_funds}" =
+               ctx.conn
+               |> patch("/api/accounts/withdraw", input_for_withdraw)
                |> json_response(200)
     end
   end
 
   describe "PATCH /api/accounts/deposit" do
-    test "successfully deposits money to an account when input is valid", %{conn: conn} do
-      new_account_params = %{
-        "name" => "John Doe",
-        "email" => "john@email.com",
-        "balance" => 100
-      }
-
-      account = Repo.insert!(Accounts.changeset(new_account_params))
+    test "successfully deposits money to an account when input is valid", ctx do
+      account = Repo.insert!(Accounts.changeset(ctx.account_input))
 
       input_for_deposit = %{
         "account_id" => account.id,
@@ -128,19 +99,15 @@ defmodule BankingApiWeb.AccountControllerTest do
       }
 
       assert %{"account" => %{"balance" => 130, "id" => _}, "message" => "Deposit successful"} =
-               conn
+               ctx.conn
                |> patch("/api/accounts/deposit", input_for_deposit)
                |> json_response(200)
     end
   end
 
   describe "PATCH /api/accounts/transfer" do
-    test "successfully transfers between accounts when input is valid", %{conn: conn} do
-      from_account_params = %{
-        "name" => "John Doe",
-        "email" => "john@email.com",
-        "balance" => 100
-      }
+    test "successfully transfers between accounts when input is valid", ctx do
+      from_account_params = ctx.account_input
 
       to_account_params = %{
         "name" => "Johanna Doe",
@@ -164,17 +131,13 @@ defmodule BankingApiWeb.AccountControllerTest do
                },
                "message" => "Transfer successful"
              } =
-               conn
+               ctx.conn
                |> patch("/api/accounts/transfer", input_for_transfer)
                |> json_response(200)
     end
 
-    test "fails transfers when balance is insufficient", %{conn: conn} do
-      from_account_params = %{
-        "name" => "John Doe",
-        "email" => "john@email.com",
-        "balance" => 100
-      }
+    test "fails transfers when balance is insufficient", ctx do
+      from_account_params = ctx.account_input
 
       to_account_params = %{
         "name" => "Johanna Doe",
@@ -192,13 +155,13 @@ defmodule BankingApiWeb.AccountControllerTest do
       }
 
       assert %{"reason" => "Invalid balance"} =
-               conn
+               ctx.conn
                |> patch("/api/accounts/transfer", input_for_transfer)
                |> json_response(200)
     end
   end
 
-  # defp update!(model, changes) do
-  #   model |> change(changes) |> Repo.update!()
-  # end
+  defp update!(model, key, value) do
+    model |> Map.replace(key, value)
+  end
 end

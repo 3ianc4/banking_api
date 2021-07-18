@@ -1,10 +1,11 @@
 defmodule BankingApiWeb.AccountController do
-  @moduledoc false
+  @moduledoc """
+  Account's actions.
+  """
   use BankingApiWeb, :controller
 
   alias BankingApi.Accounts.Account
   alias BankingApi.Accounts.Inputs.{Deposit, Transfer, Withdraw}
-  alias BankingApi.Accounts.Transactions
 
   action_fallback BankingApiWeb.FallbackController
 
@@ -65,7 +66,7 @@ defmodule BankingApiWeb.AccountController do
       {:error, :insufficient_funds} ->
         {:error, :insufficient_funds}
 
-        send_json(conn, 200, "{:error, :inssuficient_balance}")
+        send_json(conn, 200, "{:error, :insufficient_funds}")
     end
   end
 
