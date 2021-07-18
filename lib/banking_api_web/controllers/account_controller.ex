@@ -51,7 +51,7 @@ defmodule BankingApiWeb.AccountController do
     with {:ok, validated} <- validate_transaction(params, Withdraw),
          {:ok, account} <- BankingApi.withdraw(validated) do
       response = %{
-        message: "Withdrawal successful",
+        message: "Withdraw successful",
         account: %{
           id: account.id,
           balance: account.balance

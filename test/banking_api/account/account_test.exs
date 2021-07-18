@@ -1,67 +1,42 @@
 defmodule BankingApi.Accounts.AccountTest do
   use ExUnit.Case, async: true
 
-  alias BankingApi.Accounts.Account
+  setup do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(BankingApi.Repo)
+
+    account_params = %{
+      "name" => "anna",
+      "email" => "anna@mail.com",
+      "balance" => 100
+    }
+
+    {:ok, account_params: account_params}
+  end
 
   describe "execute/1" do
-    setup do
-      :ok = Ecto.Adapters.SQL.Sandbox.checkout(BankingApi.Repo)
+    test "successfully creates an account when params are valid", ctx do
+      assert {:ok, _account} = BankingApi.create_account(ctx.account_params)
     end
 
-    test "successfully creates an account when params are valid" do
-      account_params = %{
-        "name" => "anna",
-        "email" => "anna@mail.com",
-        "balance" => 1
-      }
-
-      assert {:ok, _account} = Account.execute(account_params)
+    test "fails to create an account when name is invalid", ctx do
+      account_params = update!(ctx.account_params, "name", "a")
+      assert {:error, _changeset} = BankingApi.create_account(account_params)
     end
 
-    test "fails to create an account when name is invalid" do
-      account_params = %{
-        "name" => "an",
-        "email" => "anna@mail.com",
-        "balance" => 1
-      }
-
-      assert {:error, _changeset} = Account.execute(account_params)
+    test "fails to create an account when email is invalid", ctx do
+      account_params = update!(ctx.account_params, "email", "a")
+      assert {:error, _changeset} = BankingApi.create_account(account_params)
     end
 
-    test "fails to create an account when email is invalid" do
-      account_params = %{
-        "name" => "anna",
-        "email" => "annamail.com",
-        "balance" => 1
-      }
-
-      assert {:error, _changeset} = Account.execute(account_params)
-    end
-
-    test "fails to create an account when balance is invalid" do
-      account_params = %{
-        "name" => "anna",
-        "email" => "anna@mail.com",
-        "balance" => -1
-      }
-
-      assert {:error, _changeset} = Account.execute(account_params)
+    test "fails to create an account when balance is invalid", ctx do
+      account_params = update!(ctx.account_params, "balance", -1)
+      assert {:error, _changeset} = BankingApi.create_account(account_params)
     end
   end
 
   describe "withdraw/1" do
-    setup do
-      :ok = Ecto.Adapters.SQL.Sandbox.checkout(BankingApi.Repo)
-    end
-
-    test "succeeds when params are valid" do
-      account_params = %{
-        "name" => "anna",
-        "email" => "anna@mail.com",
-        "balance" => 100
-      }
-
-      {:ok, account} = Account.execute(account_params)
+    test "succeeds when params are valid", ctx do
+      {:ok, account} = BankingApi.create_account(ctx.account_params)
 
       withdraw_params = %{
         account_id: account.id,
@@ -75,18 +50,8 @@ defmodule BankingApi.Accounts.AccountTest do
   end
 
   describe "deposit/1" do
-    setup do
-      :ok = Ecto.Adapters.SQL.Sandbox.checkout(BankingApi.Repo)
-    end
-
-    test "succeeds when params are valid" do
-      account_params = %{
-        "name" => "anna",
-        "email" => "anna@mail.com",
-        "balance" => 100
-      }
-
-      {:ok, account} = Account.execute(account_params)
+    test "succeeds when params are valid", ctx do
+      {:ok, account} = BankingApi.create_account(ctx.account_params)
 
       deposit_params = %{
         account_id: account.id,
@@ -100,16 +65,8 @@ defmodule BankingApi.Accounts.AccountTest do
   end
 
   describe "transfer/1" do
-    setup do
-      :ok = Ecto.Adapters.SQL.Sandbox.checkout(BankingApi.Repo)
-    end
-
-    test "succeeds when params are valid" do
-      from_account_params = %{
-        "name" => "anna",
-        "email" => "anna@mail.com",
-        "balance" => 100
-      }
+    test "succeeds when params are valid", ctx do
+      from_account_params = ctx.account_params
 
       to_account_params = %{
         "name" => "louise",
@@ -117,8 +74,8 @@ defmodule BankingApi.Accounts.AccountTest do
         "balance" => 100
       }
 
-      {:ok, from_account} = Account.execute(from_account_params)
-      {:ok, to_account} = Account.execute(to_account_params)
+      {:ok, from_account} = BankingApi.create_account(from_account_params)
+      {:ok, to_account} = BankingApi.create_account(to_account_params)
 
       transfer_params = %{
         from_account_id: from_account.id,
@@ -130,5 +87,9 @@ defmodule BankingApi.Accounts.AccountTest do
 
       assert 70 == result.balance
     end
+  end
+
+  defp update!(model, key, value) do
+    model |> Map.replace(key, value)
   end
 end

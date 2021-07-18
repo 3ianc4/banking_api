@@ -75,7 +75,7 @@ defmodule BankingApiWeb.AccountControllerTest do
     end
 
     test "withdrawal fails when balance is insufficient", ctx do
-        account = Repo.insert!(Accounts.changeset(ctx.account_input))
+      account = Repo.insert!(Accounts.changeset(ctx.account_input))
 
       input_for_withdraw = %{
         "account_id" => account.id,
